@@ -27,10 +27,11 @@ jobs:
           gradle-version: '8.9'
 
       - name: Build Android APK
+        working-directory: "COLLAB_Android_CloudBuild (1)/COLLAB_Android"
         run: gradle --no-daemon :app:assembleDebug
 
       - name: Save APK
         uses: actions/upload-artifact@v4
         with:
           name: COLLAB-Android-APK
-          path: app/build/outputs/apk/debug/app-debug.apk
+          path: "COLLAB_Android_CloudBuild (1)/COLLAB_Android/app/build/outputs/apk/debug/app-debug.apk"
