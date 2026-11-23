@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"><meta name="theme-color" content="#635bff"><title>COLLAB</title>
+<style>
+:root{--ink:#17172b;--muted:#73748a;--line:#e9eaf2;--brand:#635bff;--bg:#f7f8fc}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px system-ui,-apple-system,Segoe UI,sans-serif}header{background:white;padding:18px 18px 12px;border-bottom:1px solid var(--line);position:sticky;top:0;z-index:2}header b{font-size:24px;letter-spacing:2px;color:var(--brand)}header small{display:block;color:var(--muted);margin-top:2px}.wrap{max-width:620px;margin:auto;padding:14px 14px 86px}.panel,.post{background:white;border:1px solid var(--line);border-radius:18px;padding:15px;margin:12px 0;box-shadow:0 3px 12px #2221}.muted{color:var(--muted)}input,textarea{width:100%;border:1px solid var(--line);border-radius:12px;padding:12px;font:inherit;margin:6px 0;background:white}textarea{min-height:82px;resize:vertical}button{border:0;background:var(--brand);color:white;border-radius:12px;padding:11px 15px;font-weight:650;font-size:14px}button.secondary{background:#efefff;color:var(--brand)}button.ghost{background:#f2f3f8;color:#45465c}.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.nav{position:fixed;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--line);display:flex;justify-content:space-around;padding:9px 2px calc(9px + env(safe-area-inset-bottom));z-index:3}.nav button{background:transparent;color:#68697d;padding:8px 10px}.nav button.active{color:var(--brand);background:#f0efff}.hidden{display:none}.tag{display:inline-block;background:#f0efff;color:var(--brand);padding:5px 9px;border-radius:20px;font-size:12px}.row{display:flex;justify-content:space-between;align-items:center;gap:10px}.post p{white-space:pre-wrap;line-height:1.45}.post h3{margin:4px 0}.notice{font-size:12px;color:var(--muted);line-height:1.5}
+</style></head><body>
+<header><b>COLLAB</b><small>Meet people. Share ideas. Build together.</small></header>
+<div class="wrap">
+<section id="auth" class="panel"><h2>Welcome to COLLAB</h2><p class="muted">Create a local test account to explore the prototype.</p><input id="name" placeholder="Your name"><input id="handle" placeholder="Username (e.g. alex)"><button onclick="signup()">Create test profile</button><p class="notice">This demo stores data only on this phone. It does not create an online account.</p></section>
+<section id="app" class="hidden">
+<div id="feed">
+<div class="panel"><div class="row"><b>Global feed</b><span class="tag">Prototype</span></div><textarea id="postText" placeholder="What would you like to share?"></textarea><button onclick="publish()">Publish post</button></div><div id="posts"></div>
+</div>
+<div id="discover" class="hidden"><div class="panel"><h2>Discover</h2><p class="muted">People and communities in this demo.</p><div id="people"></div></div></div>
+<div id="communities" class="hidden"><div class="panel"><h2>Communities</h2><input id="communityName" placeholder="Create a community"><button onclick="createCommunity()">Create</button><div id="communityList"></div></div></div>
+<div id="profile" class="hidden"><div class="panel"><h2>Your profile</h2><h3 id="profileName"></h3><p id="profileHandle" class="muted"></p><textarea id="bio" placeholder="Write a short bio"></textarea><button onclick="saveBio()">Save bio</button><div class="notice" style="margin-top:14px">COLLAB test build · Version 0.1.0</div></div></div>
+</section></div>
+<nav class="nav hidden" id="nav"><button class="active" onclick="tab('feed',this)">Home</button><button onclick="tab('discover',this)">Discover</button><button onclick="tab('communities',this)">Groups</button><button onclick="tab('profile',this)">Profile</button></nav>
+<script>
+const $=id=>document.getElementById(id);let data=JSON.parse(localStorage.getItem('collab_demo')||'{"user":null,"posts":[],"communities":["Creators","Technology","Travel"]}');
+function save(){localStorage.setItem('collab_demo',JSON.stringify(data))}
+function boot(){if(data.user){$('auth').classList.add('hidden');$('app').classList.remove('hidden');$('nav').classList.remove('hidden');$('profileName').textContent=data.user.name;$('profileHandle').textContent='@'+data.user.handle;$('bio').value=data.user.bio||'';render()}}
+function signup(){let name=$('name').value.trim(),handle=$('handle').value.trim().replace(/^@/,'');if(!name||!handle){alert('Enter your name and username.');return}data.user={name,handle,bio:''};save();boot()}
+function publish(){let text=$('postText').value.trim();if(!text)return;data.posts.unshift({id:Date.now(),text,by:data.user.name,handle:data.user.handle,likes:0});$('postText').value='';save();render()}
+function like(id){let p=data.posts.find(x=>x.id===id);if(p){p.likes++;save();render()}}
+function render(){$('posts').innerHTML=data.posts.map(p=>`<article class="post"><div class="row"><b>${esc(p.by)}</b><span class="muted">@${esc(p.handle)}</span></div><p>${esc(p.text)}</p><button class="secondary" onclick="like(${p.id})">♥ ${p.likes} Like</button></article>`).join('')||'<div class="panel muted">No posts yet. Share the first idea!</div>';$('people').innerHTML=`<p><b>${esc(data.user.name)}</b> <span class="muted">@${esc(data.user.handle)} · You</span></p><p class="notice">In the online version, this space will help you find and follow people worldwide.</p>`;$('communityList').innerHTML=data.communities.map(c=>`<p class="row"><b>${esc(c)}</b><span class="tag">Community</span></p>`).join('')}
+function createCommunity(){let n=$('communityName').value.trim();if(!n)return;data.communities.push(n);$('communityName').value='';save();render()}
+function saveBio(){data.user.bio=$('bio').value.trim();save();alert('Bio saved on this phone.')}
+function tab(id,btn){['feed','discover','communities','profile'].forEach(x=>$(x).classList.toggle('hidden',x!==id));document.querySelectorAll('.nav button').forEach(x=>x.classList.remove('active'));btn.classList.add('active')}
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+boot();
+</script></body></html>
